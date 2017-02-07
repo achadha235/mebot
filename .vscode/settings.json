@@ -1,0 +1,14 @@
+{
+    "eslint.enable": false,
+    "jshint.enable": false,
+    "search.exclude": {
+        "**/.git": true,
+        "**/node_modules": true,
+        "**/bower_components": true,
+        "**/tmp": true,
+        "**/dist": true
+    },
+    "files.exclude": {
+        "**/dist": true
+    }
+}

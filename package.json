@@ -6,7 +6,7 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "webpack --config webpack.config.js",
-    "dev": "webpack-dev-server --content-base ./dist/"
+    "dev": "webpack --watch;"
   },
   "repository": {
     "type": "git",
@@ -21,6 +21,7 @@
     "axios": "^0.15.2",
     "halogen": "^0.2.0",
     "jquery": "^3.1.1",
+    "jsonp": "^0.2.1",
     "lodash": "^4.17.2",
     "react": "^15.4.1",
     "react-chat-ui": "0.0.22",

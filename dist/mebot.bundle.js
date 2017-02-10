@@ -24340,6 +24340,27 @@ var initialMessages = [{ type: 1, message: "I'm the recipient! (The person you'r
 { type: 0, message: "I'm the user!" }];
 
 var isTyping = false;
+var defaultBubbleStyle = {
+    text: {
+        fontSize: 30,
+        fontFamily: 'Helvetica'
+    },
+    chatbubble: {
+        borderRadius: 70,
+        padding: 40
+    }
+};
+
+var defaultTextBoxStyle = {
+    fontSize: "30px",
+    width: "96vw",
+    position: "absolute",
+    bottom: "2vh",
+    height: "12vh",
+    paddingLeft: "10px",
+    paddingRight: "10px",
+    color: "#404040"
+};
 
 var WitAIChatFeed = function (_React$Component) {
     _inherits(WitAIChatFeed, _React$Component);
@@ -24351,10 +24372,22 @@ var WitAIChatFeed = function (_React$Component) {
 
         var _this = _possibleConstructorReturn(this, (WitAIChatFeed.__proto__ || Object.getPrototypeOf(WitAIChatFeed)).call(this, props));
 
+        var newBubbleStyles = defaultBubbleStyle;
+        var newTextBoxStyles = defaultTextBoxStyle;
+        if (props.bubbleStyles !== undefined) {
+            newBubbleStyles = props.bubbleStyles;
+        }
+
+        if (props.textBoxStyle !== undefined) {
+            newBubbleStyles = props.bubbleStyles;
+        }
         _this.state = {
             apiKey: props.apiKey,
-            messages: initialMessages
+            messages: initialMessages,
+            bubbleStyles: newBubbleStyles,
+            textBoxStyle: newTextBoxStyles
         };
+
         _this.startChat();
         return _this;
     }
@@ -24384,17 +24417,9 @@ var WitAIChatFeed = function (_React$Component) {
                     isTyping: true,
                     hasInputField: false,
                     bubblesCentered: false,
-                    bubbleStyles: {
-                        text: {
-                            fontSize: 30
-                        },
-                        chatbubble: {
-                            borderRadius: 70,
-                            padding: 40
-                        }
-                    }
+                    bubbleStyles: self.state.bubbleStyles
                 }),
-                _react2.default.createElement('input', { type: 'text' })
+                _react2.default.createElement('input', { type: 'text', style: self.state.textBoxStyle })
             );
         }
     }]);

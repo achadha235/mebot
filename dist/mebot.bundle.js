@@ -10344,7 +10344,6 @@ var WitAI = exports.WitAI = function () {
         value: function converse(onDidRecieveData) {
             this.sessionId = "abc1235";
             this.onDidRecieveDataCb = onDidRecieveData;
-
             this.proxyEndpoint = "https://om938bxgwj.execute-api.us-east-1.amazonaws.com/dev/witProxy";
 
             _axios2.default.get(this.proxyEndpoint, {
@@ -10355,13 +10354,13 @@ var WitAI = exports.WitAI = function () {
                 },
                 params: {
                     session_id: this.sessionId,
-                    q: "hey",
-                    v: 20141022
+                    message: "hey"
                 }
             }).then(function (data) {
                 debugger;
                 console.log("Data");
             });
+
             console.log("Starting chat");
             console.log(this.apiKey);
         }
@@ -24336,9 +24335,7 @@ function _possibleConstructorReturn(self, call) { if (!self) { throw new Referen
 
 function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 
-var initialMessages = [{ type: 1, message: "I'm the recipient! (The person you're talking to)" }, // Gray bubble
-{ type: 0, message: "I'm the user!" }];
-
+var initialMessages = [];
 var isTyping = false;
 var defaultBubbleStyle = {
     text: {
@@ -24359,7 +24356,8 @@ var defaultTextBoxStyle = {
     height: "12vh",
     paddingLeft: "10px",
     paddingRight: "10px",
-    color: "#404040"
+    color: "#404040",
+    outline: "none"
 };
 
 var WitAIChatFeed = function (_React$Component) {
@@ -24385,7 +24383,8 @@ var WitAIChatFeed = function (_React$Component) {
             apiKey: props.apiKey,
             messages: initialMessages,
             bubbleStyles: newBubbleStyles,
-            textBoxStyle: newTextBoxStyles
+            textBoxStyle: newTextBoxStyles,
+            currentComposedMessage: ""
         };
 
         _this.startChat();
@@ -24396,14 +24395,44 @@ var WitAIChatFeed = function (_React$Component) {
         key: 'startChat',
         value: function startChat() {
             this.witApi = new _wit.WitAI({ apiKey: this.state.apiKey });
-            this.witApi.converse({
-                onRecieve: this.onDidRecieveUpdate
-            });
         }
     }, {
         key: 'onDidRecieveUpdate',
         value: function onDidRecieveUpdate(data) {
             console.log("Got a callback from Wit AI");
+        }
+    }, {
+        key: 'sendMessage',
+        value: function sendMessage() {
+            var self = this;
+            self.messages.push({});
+            self.witApi.converse(function (response) {
+                console.log(response);
+            });
+        }
+    }, {
+        key: 'handleKeyPress',
+        value: function handleKeyPress(event) {
+            var self = this;
+            switch (event.key) {
+                case 'Enter':
+                    alert("Entered pressed");
+                    self.sendMessage();
+                    break;
+                default:
+                    if (event.target.value !== self.state.currentComposedMessage) {
+                        self.setState({ currentComposedMessage: event.target.value });
+                        console.log(this.state.currentComposedMessage);
+                    }
+                    break;
+            }
+        }
+    }, {
+        key: 'handleInputChanged',
+        value: function handleInputChanged(event) {
+            var self = this;
+            self.setState({ currentComposedMessage: event.target.value });
+            console.log(this.state.currentComposedMessage);
         }
     }, {
         key: 'render',
@@ -24417,9 +24446,12 @@ var WitAIChatFeed = function (_React$Component) {
                     isTyping: true,
                     hasInputField: false,
                     bubblesCentered: false,
-                    bubbleStyles: self.state.bubbleStyles
-                }),
-                _react2.default.createElement('input', { type: 'text', style: self.state.textBoxStyle })
+                    bubbleStyles: self.state.bubbleStyles }),
+                _react2.default.createElement('input', {
+                    type: 'text',
+                    style: self.state.textBoxStyle,
+                    onKeyDown: self.handleKeyPress.bind(self),
+                    onChange: self.handleInputChanged.bind(self) })
             );
         }
     }]);

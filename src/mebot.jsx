@@ -10,16 +10,49 @@ const initialMessages = [
 ];
 
 const isTyping = false;
+const defaultBubbleStyle = {
+    text: {
+        fontSize: 30,
+        fontFamily: 'Helvetica'
+    },
+    chatbubble: {
+        borderRadius: 70,
+        padding: 40
+    }
+}
+
+const defaultTextBoxStyle = {
+    fontSize: "30px",
+    width: "96vw",
+    position: "absolute",
+    bottom: "2vh",
+    height: "12vh",
+    paddingLeft: "10px",
+    paddingRight: "10px",
+    color: "#404040"
+}
 
 class WitAIChatFeed extends React.Component {
 
   constructor(props) {
     debugger;
     super(props);
+    var newBubbleStyles = defaultBubbleStyle;
+    var newTextBoxStyles = defaultTextBoxStyle;
+    if (props.bubbleStyles !== undefined){
+        newBubbleStyles = props.bubbleStyles;
+    }
+
+    if (props.textBoxStyle !== undefined){
+        newBubbleStyles = props.bubbleStyles;
+    }
     this.state = {
         apiKey: props.apiKey,
-        messages: initialMessages
+        messages: initialMessages,
+        bubbleStyles: newBubbleStyles,
+        textBoxStyle: newTextBoxStyles
     };
+    
     this.startChat();
   }
 
@@ -43,19 +76,9 @@ class WitAIChatFeed extends React.Component {
             isTyping={true}
             hasInputField={false}
             bubblesCentered={false}
-            bubbleStyles={
-                {
-                    text: {
-                        fontSize: 30
-                    },
-                    chatbubble: {
-                        borderRadius: 70,
-                        padding: 40
-                    }
-                }
-            }
+            bubbleStyles={self.state.bubbleStyles}
         />
-        <input type="text"/> 
+        <input type="text" style={self.state.textBoxStyle}/> 
         </div>
     );
   }

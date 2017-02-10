@@ -12,8 +12,8 @@ const defaultBubbleStyle = {
         fontFamily: 'Helvetica'
     },
     chatbubble: {
-        borderRadius: 70,
-        padding: 40
+        borderRadius: 42,
+        padding: 42
     }
 }
 
@@ -29,6 +29,8 @@ const defaultTextBoxStyle = {
     outline: "none"
 }
 
+const defaultTextBoxPlaceholder = "Type a message..."
+
 class WitAIChatFeed extends React.Component {
 
     constructor(props) {
@@ -36,12 +38,18 @@ class WitAIChatFeed extends React.Component {
         super(props);
         var newBubbleStyles = defaultBubbleStyle;
         var newTextBoxStyles = defaultTextBoxStyle;
+        var newTextBoxPlaceholder = defaultTextBoxPlaceholder;
+
         if (props.bubbleStyles !== undefined) {
             newBubbleStyles = props.bubbleStyles;
         }
 
         if (props.textBoxStyle !== undefined) {
             newBubbleStyles = props.bubbleStyles;
+        }
+
+        if (props.textBoxPlaceholder !== undefined) {
+            var newTextBoxPlaceholder = props.textBoxPlaceholder;
         }
         this.state = {
             apiKey: props.apiKey,
@@ -64,9 +72,14 @@ class WitAIChatFeed extends React.Component {
 
     sendMessage() {
         var self = this;
-        self.messages.push({
-            
-        })
+        self
+            .state
+            .messages
+            .push({type: 0, message: self.state.currentComposedMessage});
+        debugger;
+        self.setState({ currentComposedMessage: ""});
+        this.textInput.value = "";
+
         self
             .witApi
             .converse((response) => {
@@ -78,7 +91,6 @@ class WitAIChatFeed extends React.Component {
         var self = this;
         switch (event.key) {
             case 'Enter':
-                alert("Entered pressed");
                 self.sendMessage();
                 break;
             default:
@@ -107,6 +119,10 @@ class WitAIChatFeed extends React.Component {
                     bubblesCentered={false}
                     bubbleStyles={self.state.bubbleStyles}/>
                 <input
+                    ref={(input) => {
+                    this.textInput = input;
+                }}
+                    placeholder={self.state.placeholder}
                     type="text"
                     style={self.state.textBoxStyle}
                     onKeyDown={self

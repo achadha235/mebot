@@ -24849,7 +24849,7 @@ var WitAIChatFeed = function (_React$Component) {
                 var node2 = _reactDom2.default.findDOMNode(_this2.chatContainer);
                 node2.scrollTop = node2.scrollHeight;
                 node.scrollIntoView({ behavior: "smooth" });
-            }, 100);
+            }.bind(this), 100);
         }
     }, {
         key: 'handleKeyPress',

@@ -162,12 +162,12 @@ class WitAIChatFeed extends React.Component {
 
     scrollToBottom(){
         // element.scrollTop = element.scrollHeight;
-        setTimeout(()=>{
+        setTimeout((()=>{
             const node = ReactDOM.findDOMNode(this.chatBottom);
             const node2 = ReactDOM.findDOMNode(this.chatContainer);
             node2.scrollTop = node2.scrollHeight;
             node.scrollIntoView({ behavior: "smooth" });
-        }, 100);
+        }).bind(this), 100);
         
     }
 

@@ -24691,12 +24691,12 @@ var initialMessages = [];
 var isTyping = false;
 var defaultBubbleStyle = {
     text: {
-        fontSize: 30,
+        fontSize: 22,
         fontFamily: 'Helvetica'
     },
     chatbubble: {
         borderRadius: 60,
-        padding: 42
+        padding: 18
     }
 };
 

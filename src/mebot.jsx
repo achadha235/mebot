@@ -19,12 +19,12 @@ const initialMessages = [];
 const isTyping = false;
 const defaultBubbleStyle = {
     text: {
-        fontSize: 30,
+        fontSize: 22,
         fontFamily: 'Helvetica'
     },
     chatbubble: {
         borderRadius: 60,
-        padding: 42
+        padding: 18
     }
 }
 

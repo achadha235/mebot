@@ -7,8 +7,7 @@ export class WitAI {
         this.proxyKey = "xu6l3ribQd87gxJ00h6GwPVxmhRl9TiaPtP36pEe" // Todo pass this as a param
     }
 
-    converse(onDidRecieveData) {
-        this.sessionId = "abc1235";
+    converse(message, sessionId, onDidRecieveData) {
         this.onDidRecieveDataCb = onDidRecieveData;
         this.proxyEndpoint = "https://om938bxgwj.execute-api.us-east-1.amazonaws.com/dev/witProxy";
 
@@ -19,15 +18,11 @@ export class WitAI {
                 "Content-Type": "application/json"
             },
             params: {
-                session_id: this.sessionId,
-                message: "hey"
+                session_id: sessionId,
+                message: message
             }
         }).then((data) => {
-            debugger;
-            console.log("Data");
+            onDidRecieveData(data);
         });
-
-        console.log("Starting chat");
-        console.log(this.apiKey);
     }
 }

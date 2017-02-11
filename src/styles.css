@@ -1,0 +1,138 @@
+.chat-bubble {
+  height: 72px;
+  width: 46px;
+  background: #e5e5e5;
+  position: relative;
+  margin: 0 auto;
+}
+.chat-bubble:before {
+  content: '';
+  height: 72px;
+  width: 72px;
+  left: -36px;
+  position: absolute;
+  display: block;
+  background: #e5e5e5;
+  border-radius: 50%;
+  z-index: 1;
+}
+.chat-bubble:after {
+  content: '';
+  height: 72px;
+  width: 72px;
+  right: -36px;
+  position: absolute;
+  display: block;
+  background: #e5e5e5;
+  border-radius: 50%;
+  z-index: 1;
+}
+.chat-bubble .tail {
+  height: 25px;
+  width: 25px;
+  background: #e5e5e5;
+  position: absolute;
+  left: -40px;
+  bottom: 2px;
+  border-radius: 50%;
+}
+.chat-bubble .tail:before {
+  height: 12px;
+  width: 12px;
+  background: #e5e5e5;
+  content: '';
+  display: block;
+  border-radius: 50%;
+  position: absolute;
+  left: -10px;
+  bottom: -8px;
+}
+.chat-bubble .loading {
+  position: absolute;
+  z-index: 10;
+  width: 67px;
+  left: -11px;
+  top: 27px;
+}
+.chat-bubble .loading .dot {
+  height: 17px;
+  width: 17px;
+  border-radius: 50%;
+  background: #c1c1c1;
+  display: block;
+  float: left;
+  margin: 0 0 0 8px;
+}
+.chat-bubble .loading .dot:first-child {
+  margin: 0;
+}
+.chat-bubble .loading .dot.one {
+  -webkit-animation: cycleOne 1s ease-in-out infinite;
+  -webkit-animation-direction: normal;
+}
+.chat-bubble .loading .dot.two {
+  -webkit-animation: cycleTwo 1s ease-in-out infinite;
+  -webkit-animation-direction: normal;
+}
+.chat-bubble .loading .dot.three {
+  -webkit-animation: cycleThree 1s ease-in-out infinite;
+  -webkit-animation-direction: normal;
+}
+
+@-webkit-keyframes cycleOne {
+  0% {
+    background: rgba(150, 150, 150, 0.4);
+  }
+  33.333% {
+    background: #969696;
+  }
+  66.6667% {
+    background: rgba(150, 150, 150, 0.4);
+  }
+  100% {
+    background: rgba(150, 150, 150, 0.4);
+  }
+}
+@-webkit-keyframes cycleTwo {
+  0% {
+    background: rgba(150, 150, 150, 0.4);
+  }
+  33.333% {
+    background: rgba(150, 150, 150, 0.4);
+  }
+  66.6667% {
+    background: #969696;
+  }
+  100% {
+    background: rgba(150, 150, 150, 0.4);
+  }
+}
+@-webkit-keyframes cycleThree {
+  0% {
+    background: rgba(150, 150, 150, 0.4);
+  }
+  33.333% {
+    background: rgba(150, 150, 150, 0.4);
+  }
+  66.6667% {
+    background: rgba(150, 150, 150, 0.4);
+  }
+  100% {
+    background: #969696;
+  }
+}
+
+::-webkit-scrollbar { 
+    display: none; 
+}
+
+::-webkit-input-placeholder { /* Chrome/Opera/Safari */
+  color: #DEDEDE;
+}
+
+.chatInput {
+    border-color: rgba(235, 235, 235, 0.55);
+    border-width: 4px;
+    border-bottom-color: rgba(159, 159, 159, 0.55);
+    border-right-color: rgba(163, 161, 161, 0.55);
+}

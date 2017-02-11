@@ -10341,8 +10341,7 @@ var WitAI = exports.WitAI = function () {
 
     _createClass(WitAI, [{
         key: 'converse',
-        value: function converse(onDidRecieveData) {
-            this.sessionId = "abc1235";
+        value: function converse(message, sessionId, onDidRecieveData) {
             this.onDidRecieveDataCb = onDidRecieveData;
             this.proxyEndpoint = "https://om938bxgwj.execute-api.us-east-1.amazonaws.com/dev/witProxy";
 
@@ -10353,16 +10352,12 @@ var WitAI = exports.WitAI = function () {
                     "Content-Type": "application/json"
                 },
                 params: {
-                    session_id: this.sessionId,
-                    message: "hey"
+                    session_id: sessionId,
+                    message: message
                 }
             }).then(function (data) {
-                debugger;
-                console.log("Data");
+                onDidRecieveData(data);
             });
-
-            console.log("Starting chat");
-            console.log(this.apiKey);
         }
     }]);
 
@@ -24335,6 +24330,15 @@ function _possibleConstructorReturn(self, call) { if (!self) { throw new Referen
 
 function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 
+__webpack_require__(211);
+
+var guid = function guid() {
+    var s4 = function s4() {
+        return Math.floor((1 + Math.random()) * 0x10000).toString(16).substring(1);
+    };
+    return s4() + s4() + '-' + s4() + '-' + s4() + '-' + s4() + '-' + s4() + s4() + s4();
+};
+
 var initialMessages = [];
 var isTyping = false;
 var defaultBubbleStyle = {
@@ -24343,16 +24347,41 @@ var defaultBubbleStyle = {
         fontFamily: 'Helvetica'
     },
     chatbubble: {
-        borderRadius: 42,
+        borderRadius: 60,
         padding: 42
     }
+};
+
+var loadingStyle = {
+    position: "fixed",
+    bottom: "17vh",
+    left: "73px"
+};
+
+var Loading = function Loading(props) {
+    return _react2.default.createElement(
+        'div',
+        { style: loadingStyle },
+        _react2.default.createElement(
+            'div',
+            { className: 'chat-bubble' },
+            _react2.default.createElement(
+                'div',
+                { className: 'loading' },
+                _react2.default.createElement('div', { className: 'dot one' }),
+                _react2.default.createElement('div', { className: 'dot two' }),
+                _react2.default.createElement('div', { className: 'dot three' })
+            ),
+            _react2.default.createElement('div', { className: 'tail' })
+        )
+    );
 };
 
 var defaultTextBoxStyle = {
     fontSize: "30px",
     width: "96vw",
-    position: "absolute",
-    bottom: "2vh",
+    position: "relative",
+    bottom: "-1vh",
     height: "12vh",
     paddingLeft: "10px",
     paddingRight: "10px",
@@ -24367,8 +24396,6 @@ var WitAIChatFeed = function (_React$Component) {
 
     function WitAIChatFeed(props) {
         _classCallCheck(this, WitAIChatFeed);
-
-        debugger;
 
         var _this = _possibleConstructorReturn(this, (WitAIChatFeed.__proto__ || Object.getPrototypeOf(WitAIChatFeed)).call(this, props));
 
@@ -24387,12 +24414,16 @@ var WitAIChatFeed = function (_React$Component) {
         if (props.textBoxPlaceholder !== undefined) {
             var newTextBoxPlaceholder = props.textBoxPlaceholder;
         }
+
+        var sessionId = guid();
         _this.state = {
             apiKey: props.apiKey,
             messages: initialMessages,
             bubbleStyles: newBubbleStyles,
             textBoxStyle: newTextBoxStyles,
-            currentComposedMessage: ""
+            textBoxPlaceholder: newTextBoxPlaceholder,
+            currentComposedMessage: "",
+            sessionId: sessionId
         };
 
         _this.startChat();
@@ -24406,21 +24437,71 @@ var WitAIChatFeed = function (_React$Component) {
         }
     }, {
         key: 'onDidRecieveUpdate',
-        value: function onDidRecieveUpdate(data) {
-            console.log("Got a callback from Wit AI");
-        }
+        value: function onDidRecieveUpdate(data) {}
     }, {
         key: 'sendMessage',
         value: function sendMessage() {
             var self = this;
+            var msg = self.state.currentComposedMessage;
             self.state.messages.push({ type: 0, message: self.state.currentComposedMessage });
-            debugger;
             self.setState({ currentComposedMessage: "" });
+            self.scrollToBottom();
+            //setTimeout(self.scrollToBottom, 100);
             this.textInput.value = "";
 
-            self.witApi.converse(function (response) {
-                console.log(response);
+            self.witApi.converse(msg, self.state.sessionId, self.handleConversationResponse.bind(self));
+        }
+    }, {
+        key: 'handleConversationResponse',
+        value: function handleConversationResponse(response) {
+            var self = this;
+            if (response.data.type !== undefined && response.data.type == "msg") {
+                self.messageRecieved(response.data.msg);
+            }
+        }
+    }, {
+        key: 'showTypingFor',
+        value: function showTypingFor(numberOfMs) {
+            var self = this;
+            return new Promise(function (resolve, reject) {
+                self.setState({
+                    isTyping: true
+                });
+                setTimeout(function () {
+                    self.setState({
+                        isTyping: false
+                    });
+                    resolve();
+                }, numberOfMs);
             });
+        }
+    }, {
+        key: 'messageRecieved',
+        value: function messageRecieved(message) {
+            var self = this;
+            var numWords = message.split(" ").length;
+            var messageTypingLengthFactor = 300;
+            var showTypingLength = Math.min(messageTypingLengthFactor * message.length, 2300);
+
+            self.scrollToBottom();
+            self.showTypingFor(showTypingLength).then(function () {
+                self.state.messages.push({ type: 1, message: message });
+                self.setState({});
+                self.scrollToBottom();
+            });
+        }
+    }, {
+        key: 'scrollToBottom',
+        value: function scrollToBottom() {
+            var _this2 = this;
+
+            // element.scrollTop = element.scrollHeight;
+            setTimeout(function () {
+                var node = _reactDom2.default.findDOMNode(_this2.chatBottom);
+                var node2 = _reactDom2.default.findDOMNode(_this2.chatContainer);
+                node2.scrollTop = node2.scrollHeight;
+                node.scrollIntoView({ behavior: "smooth" });
+            }, 100);
         }
     }, {
         key: 'handleKeyPress',
@@ -24433,7 +24514,6 @@ var WitAIChatFeed = function (_React$Component) {
                 default:
                     if (event.target.value !== self.state.currentComposedMessage) {
                         self.setState({ currentComposedMessage: event.target.value });
-                        console.log(this.state.currentComposedMessage);
                     }
                     break;
             }
@@ -24443,32 +24523,48 @@ var WitAIChatFeed = function (_React$Component) {
         value: function handleInputChanged(event) {
             var self = this;
             self.setState({ currentComposedMessage: event.target.value });
-            console.log(this.state.currentComposedMessage);
         }
     }, {
         key: 'render',
         value: function render() {
-            var _this2 = this;
+            var _this3 = this;
 
             var self = this;
             return _react2.default.createElement(
                 'div',
-                null,
-                _react2.default.createElement(_reactChatUi.ChatFeed, {
-                    messages: self.state.messages,
-                    isTyping: true,
-                    hasInputField: false,
-                    bubblesCentered: false,
-                    bubbleStyles: self.state.bubbleStyles }),
+                { style: { position: "absolute" },
+                    ref: function ref(ele) {
+                        _this3.chatContainer = ele;
+                    } },
+                _react2.default.createElement(
+                    'div',
+                    { style: { height: '84vh', overflow: 'scroll' } },
+                    _react2.default.createElement(_reactChatUi.ChatFeed, {
+                        messages: self.state.messages,
+                        isTyping: true,
+                        hasInputField: false,
+                        bubblesCentered: false,
+                        bubbleStyles: self.state.bubbleStyles }),
+                    _react2.default.createElement('div', { ref: function ref(ele) {
+                            _this3.chatBottom = ele;
+                        },
+                        style: { height: "5px" } })
+                ),
                 _react2.default.createElement('input', {
                     ref: function ref(input) {
-                        _this2.textInput = input;
+                        _this3.textInput = input;
                     },
-                    placeholder: self.state.placeholder,
+                    className: 'chatInput',
+                    placeholder: self.state.textBoxPlaceholder,
                     type: 'text',
                     style: self.state.textBoxStyle,
                     onKeyDown: self.handleKeyPress.bind(self),
-                    onChange: self.handleInputChanged.bind(self) })
+                    onChange: self.handleInputChanged.bind(self) }),
+                function () {
+                    if (self.state.isTyping) {
+                        return _react2.default.createElement(Loading, null);
+                    }
+                }()
             );
         }
     }]);
@@ -24477,6 +24573,354 @@ var WitAIChatFeed = function (_React$Component) {
 }(_react2.default.Component);
 
 _reactDom2.default.render(_react2.default.createElement(WitAIChatFeed, { apiKey: 'CKNRVMTUDFMPFLIYGUY2NS5B6CA3MSYH' }), document.getElementById('mebot-root'));
+
+/***/ }),
+/* 211 */
+/***/ (function(module, exports, __webpack_require__) {
+
+// style-loader: Adds some css to the DOM by adding a <style> tag
+
+// load the styles
+var content = __webpack_require__(212);
+if(typeof content === 'string') content = [[module.i, content, '']];
+// add the styles to the DOM
+var update = __webpack_require__(214)(content, {});
+if(content.locals) module.exports = content.locals;
+// Hot Module Replacement
+if(false) {
+	// When the styles change, update the <style> tags
+	if(!content.locals) {
+		module.hot.accept("!!./../node_modules/css-loader/index.js!./styles.css", function() {
+			var newContent = require("!!./../node_modules/css-loader/index.js!./styles.css");
+			if(typeof newContent === 'string') newContent = [[module.id, newContent, '']];
+			update(newContent);
+		});
+	}
+	// When the module is disposed, remove the <style> tags
+	module.hot.dispose(function() { update(); });
+}
+
+/***/ }),
+/* 212 */
+/***/ (function(module, exports, __webpack_require__) {
+
+exports = module.exports = __webpack_require__(213)();
+// imports
+
+
+// module
+exports.push([module.i, ".chat-bubble {\n  height: 72px;\n  width: 46px;\n  background: #e5e5e5;\n  position: relative;\n  margin: 0 auto;\n}\n.chat-bubble:before {\n  content: '';\n  height: 72px;\n  width: 72px;\n  left: -36px;\n  position: absolute;\n  display: block;\n  background: #e5e5e5;\n  border-radius: 50%;\n  z-index: 1;\n}\n.chat-bubble:after {\n  content: '';\n  height: 72px;\n  width: 72px;\n  right: -36px;\n  position: absolute;\n  display: block;\n  background: #e5e5e5;\n  border-radius: 50%;\n  z-index: 1;\n}\n.chat-bubble .tail {\n  height: 25px;\n  width: 25px;\n  background: #e5e5e5;\n  position: absolute;\n  left: -40px;\n  bottom: 2px;\n  border-radius: 50%;\n}\n.chat-bubble .tail:before {\n  height: 12px;\n  width: 12px;\n  background: #e5e5e5;\n  content: '';\n  display: block;\n  border-radius: 50%;\n  position: absolute;\n  left: -10px;\n  bottom: -8px;\n}\n.chat-bubble .loading {\n  position: absolute;\n  z-index: 10;\n  width: 67px;\n  left: -11px;\n  top: 27px;\n}\n.chat-bubble .loading .dot {\n  height: 17px;\n  width: 17px;\n  border-radius: 50%;\n  background: #c1c1c1;\n  display: block;\n  float: left;\n  margin: 0 0 0 8px;\n}\n.chat-bubble .loading .dot:first-child {\n  margin: 0;\n}\n.chat-bubble .loading .dot.one {\n  -webkit-animation: cycleOne 1s ease-in-out infinite;\n  -webkit-animation-direction: normal;\n}\n.chat-bubble .loading .dot.two {\n  -webkit-animation: cycleTwo 1s ease-in-out infinite;\n  -webkit-animation-direction: normal;\n}\n.chat-bubble .loading .dot.three {\n  -webkit-animation: cycleThree 1s ease-in-out infinite;\n  -webkit-animation-direction: normal;\n}\n\n@-webkit-keyframes cycleOne {\n  0% {\n    background: rgba(150, 150, 150, 0.4);\n  }\n  33.333% {\n    background: #969696;\n  }\n  66.6667% {\n    background: rgba(150, 150, 150, 0.4);\n  }\n  100% {\n    background: rgba(150, 150, 150, 0.4);\n  }\n}\n@-webkit-keyframes cycleTwo {\n  0% {\n    background: rgba(150, 150, 150, 0.4);\n  }\n  33.333% {\n    background: rgba(150, 150, 150, 0.4);\n  }\n  66.6667% {\n    background: #969696;\n  }\n  100% {\n    background: rgba(150, 150, 150, 0.4);\n  }\n}\n@-webkit-keyframes cycleThree {\n  0% {\n    background: rgba(150, 150, 150, 0.4);\n  }\n  33.333% {\n    background: rgba(150, 150, 150, 0.4);\n  }\n  66.6667% {\n    background: rgba(150, 150, 150, 0.4);\n  }\n  100% {\n    background: #969696;\n  }\n}\n\n::-webkit-scrollbar { \n    display: none; \n}\n\n::-webkit-input-placeholder { /* Chrome/Opera/Safari */\n  color: #DEDEDE;\n}\n\n.chatInput {\n    border-color: rgba(235, 235, 235, 0.55);\n    border-width: 4px;\n    border-bottom-color: rgba(159, 159, 159, 0.55);\n    border-right-color: rgba(163, 161, 161, 0.55);\n}\n", ""]);
+
+// exports
+
+
+/***/ }),
+/* 213 */
+/***/ (function(module, exports) {
+
+/*
+	MIT License http://www.opensource.org/licenses/mit-license.php
+	Author Tobias Koppers @sokra
+*/
+// css base code, injected by the css-loader
+module.exports = function() {
+	var list = [];
+
+	// return the list of modules as css string
+	list.toString = function toString() {
+		var result = [];
+		for(var i = 0; i < this.length; i++) {
+			var item = this[i];
+			if(item[2]) {
+				result.push("@media " + item[2] + "{" + item[1] + "}");
+			} else {
+				result.push(item[1]);
+			}
+		}
+		return result.join("");
+	};
+
+	// import a list of modules into the list
+	list.i = function(modules, mediaQuery) {
+		if(typeof modules === "string")
+			modules = [[null, modules, ""]];
+		var alreadyImportedModules = {};
+		for(var i = 0; i < this.length; i++) {
+			var id = this[i][0];
+			if(typeof id === "number")
+				alreadyImportedModules[id] = true;
+		}
+		for(i = 0; i < modules.length; i++) {
+			var item = modules[i];
+			// skip already imported module
+			// this implementation is not 100% perfect for weird media query combinations
+			//  when a module is imported multiple times with different media queries.
+			//  I hope this will never occur (Hey this way we have smaller bundles)
+			if(typeof item[0] !== "number" || !alreadyImportedModules[item[0]]) {
+				if(mediaQuery && !item[2]) {
+					item[2] = mediaQuery;
+				} else if(mediaQuery) {
+					item[2] = "(" + item[2] + ") and (" + mediaQuery + ")";
+				}
+				list.push(item);
+			}
+		}
+	};
+	return list;
+};
+
+
+/***/ }),
+/* 214 */
+/***/ (function(module, exports) {
+
+/*
+	MIT License http://www.opensource.org/licenses/mit-license.php
+	Author Tobias Koppers @sokra
+*/
+var stylesInDom = {},
+	memoize = function(fn) {
+		var memo;
+		return function () {
+			if (typeof memo === "undefined") memo = fn.apply(this, arguments);
+			return memo;
+		};
+	},
+	isOldIE = memoize(function() {
+		return /msie [6-9]\b/.test(window.navigator.userAgent.toLowerCase());
+	}),
+	getHeadElement = memoize(function () {
+		return document.head || document.getElementsByTagName("head")[0];
+	}),
+	singletonElement = null,
+	singletonCounter = 0,
+	styleElementsInsertedAtTop = [];
+
+module.exports = function(list, options) {
+	if(typeof DEBUG !== "undefined" && DEBUG) {
+		if(typeof document !== "object") throw new Error("The style-loader cannot be used in a non-browser environment");
+	}
+
+	options = options || {};
+	// Force single-tag solution on IE6-9, which has a hard limit on the # of <style>
+	// tags it will allow on a page
+	if (typeof options.singleton === "undefined") options.singleton = isOldIE();
+
+	// By default, add <style> tags to the bottom of <head>.
+	if (typeof options.insertAt === "undefined") options.insertAt = "bottom";
+
+	var styles = listToStyles(list);
+	addStylesToDom(styles, options);
+
+	return function update(newList) {
+		var mayRemove = [];
+		for(var i = 0; i < styles.length; i++) {
+			var item = styles[i];
+			var domStyle = stylesInDom[item.id];
+			domStyle.refs--;
+			mayRemove.push(domStyle);
+		}
+		if(newList) {
+			var newStyles = listToStyles(newList);
+			addStylesToDom(newStyles, options);
+		}
+		for(var i = 0; i < mayRemove.length; i++) {
+			var domStyle = mayRemove[i];
+			if(domStyle.refs === 0) {
+				for(var j = 0; j < domStyle.parts.length; j++)
+					domStyle.parts[j]();
+				delete stylesInDom[domStyle.id];
+			}
+		}
+	};
+}
+
+function addStylesToDom(styles, options) {
+	for(var i = 0; i < styles.length; i++) {
+		var item = styles[i];
+		var domStyle = stylesInDom[item.id];
+		if(domStyle) {
+			domStyle.refs++;
+			for(var j = 0; j < domStyle.parts.length; j++) {
+				domStyle.parts[j](item.parts[j]);
+			}
+			for(; j < item.parts.length; j++) {
+				domStyle.parts.push(addStyle(item.parts[j], options));
+			}
+		} else {
+			var parts = [];
+			for(var j = 0; j < item.parts.length; j++) {
+				parts.push(addStyle(item.parts[j], options));
+			}
+			stylesInDom[item.id] = {id: item.id, refs: 1, parts: parts};
+		}
+	}
+}
+
+function listToStyles(list) {
+	var styles = [];
+	var newStyles = {};
+	for(var i = 0; i < list.length; i++) {
+		var item = list[i];
+		var id = item[0];
+		var css = item[1];
+		var media = item[2];
+		var sourceMap = item[3];
+		var part = {css: css, media: media, sourceMap: sourceMap};
+		if(!newStyles[id])
+			styles.push(newStyles[id] = {id: id, parts: [part]});
+		else
+			newStyles[id].parts.push(part);
+	}
+	return styles;
+}
+
+function insertStyleElement(options, styleElement) {
+	var head = getHeadElement();
+	var lastStyleElementInsertedAtTop = styleElementsInsertedAtTop[styleElementsInsertedAtTop.length - 1];
+	if (options.insertAt === "top") {
+		if(!lastStyleElementInsertedAtTop) {
+			head.insertBefore(styleElement, head.firstChild);
+		} else if(lastStyleElementInsertedAtTop.nextSibling) {
+			head.insertBefore(styleElement, lastStyleElementInsertedAtTop.nextSibling);
+		} else {
+			head.appendChild(styleElement);
+		}
+		styleElementsInsertedAtTop.push(styleElement);
+	} else if (options.insertAt === "bottom") {
+		head.appendChild(styleElement);
+	} else {
+		throw new Error("Invalid value for parameter 'insertAt'. Must be 'top' or 'bottom'.");
+	}
+}
+
+function removeStyleElement(styleElement) {
+	styleElement.parentNode.removeChild(styleElement);
+	var idx = styleElementsInsertedAtTop.indexOf(styleElement);
+	if(idx >= 0) {
+		styleElementsInsertedAtTop.splice(idx, 1);
+	}
+}
+
+function createStyleElement(options) {
+	var styleElement = document.createElement("style");
+	styleElement.type = "text/css";
+	insertStyleElement(options, styleElement);
+	return styleElement;
+}
+
+function createLinkElement(options) {
+	var linkElement = document.createElement("link");
+	linkElement.rel = "stylesheet";
+	insertStyleElement(options, linkElement);
+	return linkElement;
+}
+
+function addStyle(obj, options) {
+	var styleElement, update, remove;
+
+	if (options.singleton) {
+		var styleIndex = singletonCounter++;
+		styleElement = singletonElement || (singletonElement = createStyleElement(options));
+		update = applyToSingletonTag.bind(null, styleElement, styleIndex, false);
+		remove = applyToSingletonTag.bind(null, styleElement, styleIndex, true);
+	} else if(obj.sourceMap &&
+		typeof URL === "function" &&
+		typeof URL.createObjectURL === "function" &&
+		typeof URL.revokeObjectURL === "function" &&
+		typeof Blob === "function" &&
+		typeof btoa === "function") {
+		styleElement = createLinkElement(options);
+		update = updateLink.bind(null, styleElement);
+		remove = function() {
+			removeStyleElement(styleElement);
+			if(styleElement.href)
+				URL.revokeObjectURL(styleElement.href);
+		};
+	} else {
+		styleElement = createStyleElement(options);
+		update = applyToTag.bind(null, styleElement);
+		remove = function() {
+			removeStyleElement(styleElement);
+		};
+	}
+
+	update(obj);
+
+	return function updateStyle(newObj) {
+		if(newObj) {
+			if(newObj.css === obj.css && newObj.media === obj.media && newObj.sourceMap === obj.sourceMap)
+				return;
+			update(obj = newObj);
+		} else {
+			remove();
+		}
+	};
+}
+
+var replaceText = (function () {
+	var textStore = [];
+
+	return function (index, replacement) {
+		textStore[index] = replacement;
+		return textStore.filter(Boolean).join('\n');
+	};
+})();
+
+function applyToSingletonTag(styleElement, index, remove, obj) {
+	var css = remove ? "" : obj.css;
+
+	if (styleElement.styleSheet) {
+		styleElement.styleSheet.cssText = replaceText(index, css);
+	} else {
+		var cssNode = document.createTextNode(css);
+		var childNodes = styleElement.childNodes;
+		if (childNodes[index]) styleElement.removeChild(childNodes[index]);
+		if (childNodes.length) {
+			styleElement.insertBefore(cssNode, childNodes[index]);
+		} else {
+			styleElement.appendChild(cssNode);
+		}
+	}
+}
+
+function applyToTag(styleElement, obj) {
+	var css = obj.css;
+	var media = obj.media;
+
+	if(media) {
+		styleElement.setAttribute("media", media)
+	}
+
+	if(styleElement.styleSheet) {
+		styleElement.styleSheet.cssText = css;
+	} else {
+		while(styleElement.firstChild) {
+			styleElement.removeChild(styleElement.firstChild);
+		}
+		styleElement.appendChild(document.createTextNode(css));
+	}
+}
+
+function updateLink(linkElement, obj) {
+	var css = obj.css;
+	var sourceMap = obj.sourceMap;
+
+	if(sourceMap) {
+		// http://stackoverflow.com/a/26603875
+		css += "\n/*# sourceMappingURL=data:application/json;base64," + btoa(unescape(encodeURIComponent(JSON.stringify(sourceMap)))) + " */";
+	}
+
+	var blob = new Blob([css], { type: "text/css" });
+
+	var oldSrc = linkElement.href;
+
+	linkElement.href = URL.createObjectURL(blob);
+
+	if(oldSrc)
+		URL.revokeObjectURL(oldSrc);
+}
+
 
 /***/ })
 /******/ ]);

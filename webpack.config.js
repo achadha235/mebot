@@ -5,7 +5,7 @@ var path = require('path');
 module.exports = {
     entry: './src/mebot.jsx',
     output: {
-        path: path.resolve(__dirname, 'dist'),
+        path: path.resolve(__dirname),
         filename: 'mebot.bundle.js',
     },
     module: {
